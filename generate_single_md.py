@@ -2,6 +2,7 @@ from optparse import OptionParser
 import re
 import urllib.request
 import os
+import subprocess
 
 def main():
     cli_parser = OptionParser(
@@ -17,13 +18,13 @@ def main():
     try:
         outfname = args[1]
     except IndexError:
-        outfname = "output.md"
+        outfname = "index.md"
 
     # outfname = os.path.abspath(outfname)
     basename = os.path.basename(readme_fname)
     basedir = os.path.dirname(readme_fname)
-    os.chdir(basedir)
-    with open(basename, newline=None) as readme_file:
+    # os.chdir(basedir)
+    with open(readme_fname, newline=None) as readme_file:
         toc = readme_file.read()
 
     out = ""
@@ -37,8 +38,8 @@ def main():
                 title = m.groups()[0]
                 url = m.groups()[1]
                 print("Parsing %s"%url)
-                out += title + "\n"
-                out += "*"*len(title) + "\n\n"
+                # out += title + "\n"
+                # out += "*"*len(title) + "\n\n"
                 ISURL = False
                 for scheme in ("http://", "https://"):
                     if url.startswith(scheme):
@@ -49,9 +50,16 @@ def main():
                         out += "[%s](%s)\n"%(title, url)
                         break
                 if not ISURL:
-                    with open(url, newline=None, encoding="utf-8") as tempf:
-                        text = tempf.read()
-                    out += text + "\n"
+                    # with open(url, newline=None, encoding="utf-8") as tempf:
+                    #     text = tempf.read()
+                    # out += text + "\n"
+                    mdfile = os.path.join(basedir, url)
+                    htmlfile = url[:-3] + ".html"
+                    cmd = "pandoc -S -o %s %s"%(htmlfile, mdfile)
+                    command_process = subprocess.Popen(cmd.split())
+                    command_output = command_process.communicate()[0]
+                    print(command_output)
+                    out += "[%s](%s)\n"%(title, htmlfile)
         else:
             out += line + "\n"
 
